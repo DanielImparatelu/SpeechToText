@@ -19,6 +19,7 @@ namespace SpeechToText
     public partial class Form1 : Form
     {
         private AudioProcessor audioProcessor = new AudioProcessor();
+        private SoundRecorder recorder = new SoundRecorder();
         private string filePath = string.Empty;
         private string transcribedText = "";
 
@@ -66,6 +67,7 @@ namespace SpeechToText
 
         private void transcribeBtn_Click(object sender, EventArgs e)
         {
+            processingLabel.Visible = true;
             //need to add some sort of loading screen cause this takes a bit of time
 
             if (filePath.Contains(".mp3"))
@@ -99,6 +101,7 @@ namespace SpeechToText
                 }
             }
             saveTranscriptBtn.Enabled = true;
+            processingLabel.Visible = false;
         }
 
         private void saveTranscriptBtn_Click(object sender, EventArgs e)
@@ -115,6 +118,28 @@ namespace SpeechToText
                     File.WriteAllText(dialog.FileName, transcribedText);
                 }
             }
+        }
+
+        private void startRecordingBtn_Click(object sender, EventArgs e)
+        {
+            /*
+             * HARDCODED TEMP LOCATION!!! REMEMBER TO CHANGE
+             */
+            var saveLocation = "../../../testrec.wav";
+
+            startRecordingBtn.Visible = false;
+            stopRecordingBtn.Visible = true;
+            labelRecording.Visible = true;
+            recorder.startRecording(saveLocation);
+        }
+
+        private void stopRecordingBtn_Click(object sender, EventArgs e)
+        {
+            stopRecordingBtn.Visible = false;
+            startRecordingBtn.Visible = true;
+            labelRecording.Visible = false;
+
+            recorder.stopRecording();
         }
     }
 }

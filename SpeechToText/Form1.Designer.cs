@@ -30,7 +30,7 @@
         {
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.button1 = new System.Windows.Forms.Button();
+            this.startRecordingBtn = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.fileSelectedLabel = new System.Windows.Forms.Label();
@@ -42,10 +42,14 @@
             this.enableAutoPunctuationDropdown = new System.Windows.Forms.ComboBox();
             this.label5 = new System.Windows.Forms.Label();
             this.languageCodeBox = new System.Windows.Forms.TextBox();
+            this.stopRecordingBtn = new System.Windows.Forms.Button();
+            this.labelRecording = new System.Windows.Forms.Label();
+            this.processingLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // richTextBox1
             // 
+            this.richTextBox1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.richTextBox1.Location = new System.Drawing.Point(506, 32);
             this.richTextBox1.Name = "richTextBox1";
             this.richTextBox1.Size = new System.Drawing.Size(282, 210);
@@ -61,14 +65,15 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "Transcribed text will be displayed here";
             // 
-            // button1
+            // startRecordingBtn
             // 
-            this.button1.Location = new System.Drawing.Point(16, 32);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(140, 23);
-            this.button1.TabIndex = 3;
-            this.button1.Text = "Start recording";
-            this.button1.UseVisualStyleBackColor = true;
+            this.startRecordingBtn.Location = new System.Drawing.Point(16, 32);
+            this.startRecordingBtn.Name = "startRecordingBtn";
+            this.startRecordingBtn.Size = new System.Drawing.Size(140, 23);
+            this.startRecordingBtn.TabIndex = 3;
+            this.startRecordingBtn.Text = "Start recording";
+            this.startRecordingBtn.UseVisualStyleBackColor = true;
+            this.startRecordingBtn.Click += new System.EventHandler(this.startRecordingBtn_Click);
             // 
             // button2
             // 
@@ -182,11 +187,47 @@
             this.languageCodeBox.TabIndex = 14;
             this.languageCodeBox.Text = "en-US";
             // 
+            // stopRecordingBtn
+            // 
+            this.stopRecordingBtn.Location = new System.Drawing.Point(16, 32);
+            this.stopRecordingBtn.Name = "stopRecordingBtn";
+            this.stopRecordingBtn.Size = new System.Drawing.Size(140, 23);
+            this.stopRecordingBtn.TabIndex = 15;
+            this.stopRecordingBtn.Text = "Stop Recording";
+            this.stopRecordingBtn.UseVisualStyleBackColor = true;
+            this.stopRecordingBtn.Visible = false;
+            this.stopRecordingBtn.Click += new System.EventHandler(this.stopRecordingBtn_Click);
+            // 
+            // labelRecording
+            // 
+            this.labelRecording.AutoSize = true;
+            this.labelRecording.Font = new System.Drawing.Font("Century Gothic", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelRecording.Location = new System.Drawing.Point(11, 268);
+            this.labelRecording.Name = "labelRecording";
+            this.labelRecording.Size = new System.Drawing.Size(157, 30);
+            this.labelRecording.TabIndex = 16;
+            this.labelRecording.Text = "Recording...";
+            this.labelRecording.Visible = false;
+            // 
+            // processingLabel
+            // 
+            this.processingLabel.AutoSize = true;
+            this.processingLabel.Font = new System.Drawing.Font("Century Gothic", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.processingLabel.Location = new System.Drawing.Point(13, 302);
+            this.processingLabel.Name = "processingLabel";
+            this.processingLabel.Size = new System.Drawing.Size(160, 30);
+            this.processingLabel.TabIndex = 17;
+            this.processingLabel.Text = "Processing...";
+            this.processingLabel.Visible = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.processingLabel);
+            this.Controls.Add(this.labelRecording);
+            this.Controls.Add(this.stopRecordingBtn);
             this.Controls.Add(this.languageCodeBox);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.enableAutoPunctuationDropdown);
@@ -198,7 +239,7 @@
             this.Controls.Add(this.fileSelectedLabel);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.button2);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.startRecordingBtn);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.richTextBox1);
             this.Name = "Form1";
@@ -212,7 +253,7 @@
 
         private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button startRecordingBtn;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label fileSelectedLabel;
@@ -224,6 +265,9 @@
         private System.Windows.Forms.ComboBox enableAutoPunctuationDropdown;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox languageCodeBox;
+        private System.Windows.Forms.Button stopRecordingBtn;
+        private System.Windows.Forms.Label labelRecording;
+        private System.Windows.Forms.Label processingLabel;
     }
 }
 

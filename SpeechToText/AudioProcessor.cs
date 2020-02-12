@@ -10,7 +10,7 @@ namespace SpeechToText
 {
     class AudioProcessor
     {
-
+        //uses nAudio to do magic with sounds
         public void ConvertMp3ToWav(string sourceFile, string outputFile)
         {
             using (Mp3FileReader mp3 = new Mp3FileReader(sourceFile))
@@ -37,7 +37,7 @@ namespace SpeechToText
 
         public int getSampleRate(string sourceFile)
         {
-            //if specified in the RecognitionConfig, the sample rate of the audio file must match the sample rate spec
+            //if specified in the RecognitionConfig, the sample rate must match the one in the file header
             using (var waveFileReader = new AudioFileReader(sourceFile))
             {
                 var sampleRate = waveFileReader.WaveFormat.SampleRate;
