@@ -67,6 +67,11 @@ namespace SpeechToText
 
         private void transcribeBtn_Click(object sender, EventArgs e)
         {
+            /*TODO:
+             * Convert the audio recognition to an async request to bypass the 1 minute limit 
+             * use an uri pointing to google cloud storage holding the file to be processed, 
+             * because files between 1 minute and 480 minutes must be retrieved from google cloud rather than local storage
+             */
             processingLabel.Visible = true;
             //need to add some sort of loading screen cause this takes a bit of time
 
