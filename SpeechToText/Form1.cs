@@ -18,7 +18,6 @@ namespace SpeechToText
 {
     public partial class Form1 : Form
     {
-        public static string DEMO_FILE = "myname.m4a";
         private AudioProcessor audioProcessor = new AudioProcessor();
         private string filePath = string.Empty;
         private string transcribedText = "";
@@ -26,13 +25,13 @@ namespace SpeechToText
         public Form1()
         {
             InitializeComponent();
-            voiceModelDropdown.SelectedIndex = 0;
+            voiceModelDropdown.SelectedIndex = 0; //default dropdown values
             enableAutoPunctuationDropdown.SelectedIndex = 0;
-
         }
 
         public object AuthExplicit(string projectId, string jsonPath) //only used at first for testing
         {
+            //used for checking the authentication to Google services
             // Explicitly use service account credentials by specifying 
             // the private key file.
             var credential = GoogleCredential.FromFile(jsonPath);

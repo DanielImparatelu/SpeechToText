@@ -18,14 +18,12 @@ namespace SpeechToText
                 using (WaveStream pcm = WaveFormatConversionStream.CreatePcmStream(mp3))
                 {
                     WaveFileWriter.CreateWaveFile(outputFile, pcm);
-                   // Wave
                 }
             }
         }
 
         public void ConvertStereoToMono(string sourceFile, string outputFile)
         {
-           // using (var fileReader = new FileR)
             using (var waveFileReader = new AudioFileReader(sourceFile))
             {
                 var outFormat = new WaveFormat(waveFileReader.WaveFormat.SampleRate, 1);
@@ -39,6 +37,7 @@ namespace SpeechToText
 
         public int getSampleRate(string sourceFile)
         {
+            //if specified in the RecognitionConfig, the sample rate of the audio file must match the sample rate spec
             using (var waveFileReader = new AudioFileReader(sourceFile))
             {
                 var sampleRate = waveFileReader.WaveFormat.SampleRate;
