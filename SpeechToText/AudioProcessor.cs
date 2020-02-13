@@ -35,6 +35,11 @@ namespace SpeechToText
             }
         }
 
+        public TimeSpan getDuration(string filePath)
+        {
+            return new AudioFileReader(filePath).TotalTime;
+        }
+
         public int getSampleRate(string sourceFile)
         {
             //if specified in the RecognitionConfig, the sample rate must match the one in the file header

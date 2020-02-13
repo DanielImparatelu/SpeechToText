@@ -65,6 +65,8 @@ namespace SpeechToText
             }
         }
 
+
+
         private void transcribeBtn_Click(object sender, EventArgs e)
         {
             /*TODO:
@@ -83,30 +85,68 @@ namespace SpeechToText
             var newFilePath = filePath + "m.wav"; //have to create new file, not sure how to only create it temporarily until its processed
             audioProcessor.ConvertStereoToMono(filePath, newFilePath);
 
-            // AuthExplicit("speech2text-1581342315295", "D:/projects/SpeechToText/S2TPrivateKey.json");
+            if(audioProcessor.getDuration(filePath) > new TimeSpan(0, 1, 0))
+            {
+                //process long audio
+                asyncTranscribe("gs://s2t-test-bucket1/speech.mp3m.wav");
+            }
+
+            else
+            {
+                var speech = SpeechClient.Create();
+                var response = speech.Recognize(new RecognitionConfig()
+                {
+                    Encoding = RecognitionConfig.Types.AudioEncoding.Linear16,
+                    Model = voiceModelDropdown.SelectedItem.ToString(),
+                    EnableAutomaticPunctuation = enableAutoPunctuationDropdown.SelectedItem.ToString() == "Yes" ? true : false,//true if yes selected
+                    // SampleRateHertz = processor.getSampleRate(filePath),      //another customisable option
+                    LanguageCode = languageCodeBox.Text.ToString(),
+                    //maxAlternatives, profanityFilter, speechContext
+                }, RecognitionAudio.FromFile(newFilePath));
+
+                foreach (var result in response.Results)
+                {
+                    foreach (var alternative in result.Alternatives)
+                    {
+                        richTextBox1.Text = alternative.Transcript;
+                        transcribedText += alternative.Transcript;
+                    }
+                }
+            }
+
+            saveTranscriptBtn.Enabled = true;
+            processingLabel.Visible = false;
+            File.Delete(newFilePath);
+        }
+
+        static object asyncTranscribe(string storageUri)
+        {
+            var thisForm = new Form1();
             var speech = SpeechClient.Create();
-            var response = speech.Recognize(new RecognitionConfig()
+            var longOperation = speech.LongRunningRecognize(new RecognitionConfig()
             {
                 Encoding = RecognitionConfig.Types.AudioEncoding.Linear16,
-                Model = voiceModelDropdown.SelectedItem.ToString(),
-                EnableAutomaticPunctuation = enableAutoPunctuationDropdown.SelectedItem.ToString() == "Yes" ? true : false,//true if yes selected
-                // SampleRateHertz = processor.getSampleRate(filePath),      //another customisable option
-                LanguageCode = languageCodeBox.Text.ToString(),
+                Model = thisForm.voiceModelDropdown.SelectedItem.ToString(),
+                EnableAutomaticPunctuation = thisForm.enableAutoPunctuationDropdown.SelectedItem.ToString() == "Yes" ? true : false,//true if yes selected
+                 // SampleRateHertz = processor.getSampleRate(filePath),      //another customisable option
+                LanguageCode = thisForm.languageCodeBox.Text.ToString(),
                 //maxAlternatives, profanityFilter, speechContext
-            }, RecognitionAudio.FromFile(newFilePath));
-
-
-
+            }, RecognitionAudio.FromStorageUri(storageUri));
+            longOperation = longOperation.PollUntilCompleted();
+            var response = longOperation.Result;
             foreach (var result in response.Results)
             {
                 foreach (var alternative in result.Alternatives)
                 {
-                    richTextBox1.Text = alternative.Transcript;
-                    transcribedText += alternative.Transcript;
+                  //  MessageBox.Show(result.Alternatives.ToString());
+
+               //     thisForm.richTextBox1.Text = alternative.Transcript.ToString();
+                 //   thisForm.transcribedText += alternative.Transcript;
+
+                //    File.WriteAllText(Environment.SpecialFolder.Desktop.ToString(), alternative.Transcript);
                 }
             }
-            saveTranscriptBtn.Enabled = true;
-            processingLabel.Visible = false;
+            return 0;
         }
 
         private void saveTranscriptBtn_Click(object sender, EventArgs e)
@@ -128,7 +168,7 @@ namespace SpeechToText
         private void startRecordingBtn_Click(object sender, EventArgs e)
         {
             /*
-             * HARDCODED TEMP LOCATION!!! REMEMBER TO CHANGE
+             * HARDCODED TEMP LOCATION!!! REMEMBER TO CHANGE!!!
              */
             var saveLocation = "../../../testrec.wav";
 
