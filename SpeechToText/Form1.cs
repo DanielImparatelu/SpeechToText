@@ -164,8 +164,8 @@ namespace SpeechToText
                     foreach (var alternative in result.Alternatives)
                     {
                         richTextBox1.Text = alternative.Transcript;
-                        richTextBox1.BeginInvoke((MethodInvoker)delegate { richTextBox1.AppendText(alternative.Transcript); }); //delegate to write to a control from different thread
-                        transcribedText += alternative.Transcript;
+                        richTextBox1.BeginInvoke((MethodInvoker)delegate { richTextBox1.AppendText(alternative.Transcript+ "\n"); }); //delegate to write to a control from different thread
+                        transcribedText += alternative.Transcript + "\n";
                         Console.WriteLine($"Transcript: { alternative.Transcript}");
                     }
                 }
