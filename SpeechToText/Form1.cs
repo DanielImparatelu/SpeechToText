@@ -5,7 +5,9 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Google.Apis.Auth.OAuth2;
@@ -23,6 +25,7 @@ namespace SpeechToText
         private string filePath = string.Empty;
         private string transcribedText = "";
         private string URIString = "";
+        private string newFilePath = "";
 
         public Form1()
         {
@@ -34,8 +37,7 @@ namespace SpeechToText
         public object AuthExplicit(string projectId, string jsonPath) //only used at first for testing
         {
             //used for checking the authentication to Google services
-            // Explicitly use service account credentials by specifying 
-            // the private key file.
+            // Explicitly use service account credentials by specifying  the private key file.
             var credential = GoogleCredential.FromFile(jsonPath);
             var storage = StorageClient.Create(credential);
             // Make an authenticated API request.
@@ -82,7 +84,7 @@ namespace SpeechToText
                 //convert mp3 to wav - not required currently
             }
 
-            var newFilePath = filePath + "m.wav"; //have to create new file, but it will be deleted after it's used
+            newFilePath = filePath + "m.wav"; //have to create new file, but it will be deleted after it's used
 
             if(URIString == "")
             {
@@ -125,9 +127,8 @@ namespace SpeechToText
             {
                 try
                 {
-                    asyncTranscribe(URIString);
-                    //saveTranscriptBtn.Enabled = true;
-                //    processingLabel.Visible = false;
+                   // asyncTranscribe(URIString);
+                    AsyncRecognizeGcs(URIString);
                     //"gs://s2t-test-bucket1/speech.mp3m.wav"
                 }
                 catch (UriFormatException UriException)
@@ -136,51 +137,45 @@ namespace SpeechToText
                     MessageBox.Show("Invalid URI string");
                 }
             }
-
           
             File.Delete(newFilePath);
         }
 
-        static object asyncTranscribe(string storageUri)
+         object AsyncRecognizeGcs(string storageUri)
         {
-            var thisForm = new Form1();
             var speech = SpeechClient.Create();
-            try
+            var longOperation = speech.LongRunningRecognize(new RecognitionConfig()
             {
-                var longOperation = speech.LongRunningRecognize(new RecognitionConfig()
+                Encoding = RecognitionConfig.Types.AudioEncoding.Linear16,
+                Model = voiceModelDropdown.SelectedItem.ToString(),
+                EnableAutomaticPunctuation = enableAutoPunctuationDropdown.SelectedItem.ToString() == "Yes" ? true : false,//true if yes selected
+                                                                                                                                    // SampleRateHertz = processor.getSampleRate(filePath),      //another customisable option
+                LanguageCode = languageCodeBox.Text.ToString(),
+            }, RecognitionAudio.FromStorageUri(storageUri));
+            longOperation = longOperation.PollUntilCompleted();
+            var response = longOperation.Result;
+            foreach (var result in response.Results)
+            {
+                foreach (var alternative in result.Alternatives)
                 {
-                    Encoding = RecognitionConfig.Types.AudioEncoding.Linear16,
-                    Model = thisForm.voiceModelDropdown.SelectedItem.ToString(),
-                    EnableAutomaticPunctuation = thisForm.enableAutoPunctuationDropdown.SelectedItem.ToString() == "Yes" ? true : false,//true if yes selected
-                                                                                                                                        // SampleRateHertz = processor.getSampleRate(filePath),      //another customisable option
-                    LanguageCode = thisForm.languageCodeBox.Text.ToString(),
-                    //maxAlternatives, profanityFilter, speechContext
-                }, RecognitionAudio.FromStorageUri(storageUri));
-                longOperation = longOperation.PollUntilCompleted();
-                var response = longOperation.Result;
-                foreach (var result in response.Results)
-                {
-                    foreach (var alternative in result.Alternatives)
-                    {
-                        //  MessageBox.Show(result.Alternatives.ToString());
-
-                        //     thisForm.richTextBox1.Text = alternative.Transcript.ToString();
-                        //   thisForm.transcribedText += alternative.Transcript;
-
-                        //    File.WriteAllText(Environment.SpecialFolder.Desktop.ToString(), alternative.Transcript);
-                    }
+                    richTextBox1.Text = alternative.Transcript;
+                    richTextBox1.BeginInvoke((MethodInvoker)delegate { richTextBox1.AppendText(alternative.Transcript); }); //delegate to write to a control from different thread
+                    transcribedText += alternative.Transcript;
+                    Console.WriteLine($"Transcript: { alternative.Transcript}");
                 }
-                thisForm.saveTranscriptBtn.Enabled = true;
             }
-            catch(Exception ex)
-            {
-                MessageBox.Show("An error has occured");
-                thisForm.saveTranscriptBtn.Enabled = false;
-                thisForm.processingLabel.Visible = false;
-            }
-
+            processingLabel.Visible = false;
+            saveTranscriptBtn.Enabled = true;
             return 0;
+        }
 
+        
+        static async Task writeToFileAsync(string dir, string file, string content)
+        {
+            using (StreamWriter outputFile = new StreamWriter(Path.Combine(dir, file)))
+            {
+                await outputFile.WriteAsync(content);
+            }
         }
 
         private void saveTranscriptBtn_Click(object sender, EventArgs e)
