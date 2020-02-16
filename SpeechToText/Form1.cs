@@ -22,6 +22,7 @@ namespace SpeechToText
     {
         private AudioProcessor audioProcessor = new AudioProcessor();
         private SoundRecorder recorder = new SoundRecorder();
+        private GCErrorReporting cloudErrors = new GCErrorReporting();
         private string filePath = string.Empty;
         private string transcribedText = "";
         private string URIString = "";
@@ -51,7 +52,7 @@ namespace SpeechToText
 
         private void button2_Click(object sender, EventArgs e)//add audio file from system
         {
-            using(OpenFileDialog dialog = new OpenFileDialog())
+            using (OpenFileDialog dialog = new OpenFileDialog())
             {
                 dialog.InitialDirectory = "C:\\";
                 dialog.Filter = "Audio files (*.mp3)|*.mp3;*.m4a;*.wav;*.ogg";
@@ -86,9 +87,9 @@ namespace SpeechToText
 
             newFilePath = filePath + "m.wav"; //have to create new file, but it will be deleted after it's used
 
-            if(URIString == "")
+            if (URIString == "")
             {
-                if(audioProcessor.getDuration(filePath) <= new TimeSpan(0, 1, 0))
+                if (audioProcessor.getDuration(filePath) <= new TimeSpan(0, 1, 0))
                 {
                     audioProcessor.ConvertStereoToMono(filePath, newFilePath); //usually files are recorded stereo, we need mono here
 
@@ -127,7 +128,7 @@ namespace SpeechToText
             {
                 try
                 {
-                   // asyncTranscribe(URIString);
+                    // asyncTranscribe(URIString);
                     AsyncRecognizeGcs(URIString);
                     //"gs://s2t-test-bucket1/speech.mp3m.wav"
                 }
@@ -135,41 +136,52 @@ namespace SpeechToText
                 {
                     //write to an error log maybe
                     MessageBox.Show("Invalid URI string");
+                    cloudErrors.report(UriException);
+                   
                 }
             }
-          
+
             File.Delete(newFilePath);
         }
 
-         object AsyncRecognizeGcs(string storageUri)
+        object AsyncRecognizeGcs(string storageUri)
         {
-            var speech = SpeechClient.Create();
-            var longOperation = speech.LongRunningRecognize(new RecognitionConfig()
+            try
             {
-                Encoding = RecognitionConfig.Types.AudioEncoding.Linear16,
-                Model = voiceModelDropdown.SelectedItem.ToString(),
-                EnableAutomaticPunctuation = enableAutoPunctuationDropdown.SelectedItem.ToString() == "Yes" ? true : false,//true if yes selected
-                                                                                                                                    // SampleRateHertz = processor.getSampleRate(filePath),      //another customisable option
-                LanguageCode = languageCodeBox.Text.ToString(),
-            }, RecognitionAudio.FromStorageUri(storageUri));
-            longOperation = longOperation.PollUntilCompleted();
-            var response = longOperation.Result;
-            foreach (var result in response.Results)
-            {
-                foreach (var alternative in result.Alternatives)
+                var speech = SpeechClient.Create();
+                var longOperation = speech.LongRunningRecognize(new RecognitionConfig()
                 {
-                    richTextBox1.Text = alternative.Transcript;
-                    richTextBox1.BeginInvoke((MethodInvoker)delegate { richTextBox1.AppendText(alternative.Transcript); }); //delegate to write to a control from different thread
-                    transcribedText += alternative.Transcript;
-                    Console.WriteLine($"Transcript: { alternative.Transcript}");
+                    Encoding = RecognitionConfig.Types.AudioEncoding.Linear16,
+                    Model = voiceModelDropdown.SelectedItem.ToString(),
+                    EnableAutomaticPunctuation = enableAutoPunctuationDropdown.SelectedItem.ToString() == "Yes" ? true : false,//true if yes selected
+                                                                                                                               // SampleRateHertz = processor.getSampleRate(filePath),      //another customisable option
+                    LanguageCode = languageCodeBox.Text.ToString(),
+                }, RecognitionAudio.FromStorageUri(storageUri));
+                longOperation = longOperation.PollUntilCompleted();
+                var response = longOperation.Result;
+                foreach (var result in response.Results)
+                {
+                    foreach (var alternative in result.Alternatives)
+                    {
+                        richTextBox1.Text = alternative.Transcript;
+                        richTextBox1.BeginInvoke((MethodInvoker)delegate { richTextBox1.AppendText(alternative.Transcript); }); //delegate to write to a control from different thread
+                        transcribedText += alternative.Transcript;
+                        Console.WriteLine($"Transcript: { alternative.Transcript}");
+                    }
                 }
+                processingLabel.Visible = false;
+                saveTranscriptBtn.Enabled = true;
             }
-            processingLabel.Visible = false;
-            saveTranscriptBtn.Enabled = true;
+            catch (Exception ex)
+            {
+                MessageBox.Show("An error occured, see the cloud error reporting page for details");
+                cloudErrors.report(ex);
+            }
+
             return 0;
         }
 
-        
+
         static async Task writeToFileAsync(string dir, string file, string content)
         {
             using (StreamWriter outputFile = new StreamWriter(Path.Combine(dir, file)))
@@ -216,6 +228,6 @@ namespace SpeechToText
             recorder.stopRecording();
         }
 
-      
+
     }
 }
